@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKDIR=/mnt/disks/work
-REPO_URL=https://github.com/YOURORG/YOUR-REPO.git
+WORKDIR=/home/jupyter
+REPO_URL=https://github.com/tmweiskittel/tmwalign.git
 REPO_DIR=${WORKDIR}/pipeline
 
 mkdir -p "${WORKDIR}"
