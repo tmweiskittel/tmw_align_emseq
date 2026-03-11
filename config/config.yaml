@@ -1,4 +1,7 @@
-sample_sheet: ".test/config/samples.tsv"
+data_path: weiskittel-projects1/radnecrosis/raw_data
+sample_sheet: radnec_test.csv
+md5_sheet: MD5.txt
+
 
 get_genome:
   ncbi_ftp: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/146/045/GCF_000146045.2_R64/GCF_000146045.2_R64_genomic.fna.gz
