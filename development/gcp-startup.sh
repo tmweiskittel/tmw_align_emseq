@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKDIR="$HOME"
+WORKDIR="/home/jupyter/repos"
 REPO_URL="https://github.com/tmweiskittel/tmwalign.git"
 REPO_DIR="${WORKDIR}/tmwalign"
 USER_BASHRC="${HOME}/.bashrc"
