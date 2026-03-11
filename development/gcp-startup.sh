@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKDIR="/home/jupyter"
+WORKDIR="$HOME"
 REPO_URL="https://github.com/tmweiskittel/tmwalign.git"
 REPO_DIR="${WORKDIR}/tmwalign"
-MAMBA_ROOT_PREFIX="/opt/micromamba"
-JUPYTER_BASHRC="/home/jupyter/.bashrc"
+USER_BASHRC="${HOME}/.bashrc"
 
 echo "Starting VM setup..."
 
@@ -15,21 +14,16 @@ echo "Installing system packages..."
 sudo apt-get update
 sudo apt-get install -y git curl wget bzip2 ca-certificates
 
-echo "Installing micromamba if needed..."
-if [ ! -x /usr/local/bin/micromamba ]; then
-  cd /tmp
-  curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-  sudo mv bin/micromamba /usr/local/bin/micromamba
-  rm -rf bin
+echo "Checking that conda is available..."
+if ! command -v conda >/dev/null 2>&1; then
+  echo "Error: conda was not found in PATH."
+  echo "On this VM, conda may live at /opt/conda/bin/conda."
+  exit 1
 fi
 
-echo "Configuring micromamba for future shells..."
-if ! grep -qxF 'export MAMBA_ROOT_PREFIX=/opt/micromamba' "${JUPYTER_BASHRC}" 2>/dev/null; then
-  echo 'export MAMBA_ROOT_PREFIX=/opt/micromamba' >> "${JUPYTER_BASHRC}"
-fi
-
-if ! grep -qxF 'eval "$(micromamba shell hook -s bash)"' "${JUPYTER_BASHRC}" 2>/dev/null; then
-  echo 'eval "$(micromamba shell hook -s bash)"' >> "${JUPYTER_BASHRC}"
+echo "Configuring conda for future shells..."
+if ! grep -qxF 'source /opt/conda/etc/profile.d/conda.sh' "${USER_BASHRC}" 2>/dev/null; then
+  echo 'source /opt/conda/etc/profile.d/conda.sh' >> "${USER_BASHRC}"
 fi
 
 echo "Cloning or updating repo..."
@@ -40,20 +34,26 @@ else
   git pull
 fi
 
-echo "Initializing micromamba in this shell..."
-export MAMBA_ROOT_PREFIX="${MAMBA_ROOT_PREFIX}"
-eval "$(micromamba shell hook -s bash)"
+echo "Initializing conda in this shell..."
+source /opt/conda/etc/profile.d/conda.sh
+
+echo "Leaving active base environment if needed..."
+conda deactivate >/dev/null 2>&1 || true
 
 echo "Creating snakemake environment if needed..."
-if ! micromamba env list | awk '{print $1}' | grep -qx "snakemake"; then
-  micromamba create -y -n snakemake -c conda-forge -c bioconda snakemake
+if ! conda env list | awk '{print $1}' | grep -qx "snakemake"; then
+  conda create -y \
+    -n snakemake \
+    -c conda-forge \
+    -c bioconda \
+    --override-channels \
+    snakemake-minimal
 fi
 
 echo
 echo "VM setup complete."
 echo "Next steps:"
 echo "  cd ${REPO_DIR}"
-echo "  export MAMBA_ROOT_PREFIX=${MAMBA_ROOT_PREFIX}"
-echo '  eval "$(micromamba shell hook -s bash)"'
-echo "  micromamba activate snakemake"
+echo "  source /opt/conda/etc/profile.d/conda.sh"
+echo "  conda activate snakemake"
 echo "  snakemake --help"
