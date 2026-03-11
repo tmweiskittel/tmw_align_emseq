@@ -1,6 +1,7 @@
-data_path: weiskittel-projects1/radnecrosis/raw_data
-sample_sheet: radnec_test.csv
-md5_sheet: MD5.txt
+meta:
+  data_path: weiskittel-projects1/radnecrosis/raw_data
+  sample_sheet: radnec_test.csv
+  md5_sheet: MD5.txt
 
 
 get_genome:
