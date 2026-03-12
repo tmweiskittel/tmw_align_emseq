@@ -1,11 +1,7 @@
 from pathlib import Path
 
-SAMPLESHEET = Path(config['meta']['data_path']) / config['meta']['sample_sheet']
-MD5_FILE = Path(config['meta']['data_path']) / config['meta']['md5_sheet']
-LOCAL_PATH = Path(config['meta']['local_path'])
-
-LOCAL_SAMPLES = LOCAL_PATH / "samples.csv"
-LOCAL_MD5 = LOCAL_PATH / "md5.txt"
+SAMPLESHEET = Path(DATA_PATH) / SAMPLE_SHEET
+MD5_FILE = Path(DATA_PATH) / MD5_SHEET
 
 rule download_metadata:
     output:
@@ -17,8 +13,8 @@ rule download_metadata:
     log:
         "logs/download_metadata.log"
     shell:
-        """
+        r"""
         mkdir -p {LOCAL_PATH} logs
-        gcloud storage cp {params.samples} {output.samples}
-        gcloud storage cp {params.md5} {output.md5}
+        gcloud storage cp gs://{params.samples} {output.samples} > {log} 2>&1
+        gcloud storage cp gs://{params.md5} {output.md5} >> {log} 2>&1
         """
