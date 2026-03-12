@@ -2,11 +2,11 @@ from pathlib import Path
 
 SAMPLESHEET = Path(config['meta']['data_paths']) / config['meta']['sample_sheet']
 MD5_FILE = Path(config['meta']['data_paths']) / config['meta']['md5_sheet']
-
+LOCAL_PATH= Path(config['meta']['data_paths'])
 rule download_metadata:
     output:
-        samples=/home/jupyter/data/samples.csv,
-        md5=/home/jupyter/data/md5.txt
+        samples=LOCAL_PATH / samples.csv,
+        md5=LOCAL_PATH / md5.txt
     params:
         samples=SAMPLESHEET,
         md5=MD5_FILE
