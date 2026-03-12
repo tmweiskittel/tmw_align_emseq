@@ -1,8 +1,8 @@
 from pathlib import Path
 
-SAMPLESHEET = Path(config['meta']['data_paths']) / config['meta']['sample_sheet']
-MD5_FILE = Path(config['meta']['data_paths']) / config['meta']['md5_sheet']
-LOCAL_PATH= Path(config['meta']['local_paths'])
+SAMPLESHEET = Path(config['meta']['data_path']) / config['meta']['sample_sheet']
+MD5_FILE = Path(config['meta']['data_path']) / config['meta']['md5_sheet']
+LOCAL_PATH= Path(config['meta']['local_path'])
 rule download_metadata:
     output:
         samples=str(LOCAL_PATH / "samples.csv"),
