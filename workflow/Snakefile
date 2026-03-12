@@ -33,5 +33,6 @@ onerror:
 # -----------------------------------------------------
 rule all:
     input:
-        "results/multiqc/multiqc_report.html",
+        str(LOCAL_SAMPLES),
+        str(LOCAL_MD5)
     default_target: True
