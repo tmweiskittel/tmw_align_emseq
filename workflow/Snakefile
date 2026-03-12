@@ -1,36 +1,29 @@
-# Main entrypoint of the workflow.
-# Please follow the best practices:
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there.
+from pathlib import Path
 
-
-# load configuration
-# -----------------------------------------------------
 configfile: "config/config.yaml"
 
+# shared paths
+DATA_PATH = config["meta"]["data_path"]
+SAMPLE_SHEET = config["meta"]["sample_sheet"]
+MD5_SHEET = config["meta"]["md5_sheet"]
+LOCAL_PATH = Path(config["meta"]["local_path"])
 
-# load rules
+LOCAL_SAMPLES = LOCAL_PATH / "samples.csv"
+LOCAL_MD5 = LOCAL_PATH / "md5.txt"
+
 include: "rules/metadata.smk"
-# -----------------------------------------------------
 
 
-
-# optional messages, log and error handling
-# -----------------------------------------------------
 onstart:
     print("\n--- Analysis started ---\n")
 
-
 onsuccess:
     print("\n--- Workflow finished! ---\n")
-
 
 onerror:
     print("\n--- An error occurred! ---\n")
 
 
-# target rules
-# -----------------------------------------------------
 rule all:
     input:
         str(LOCAL_SAMPLES),
