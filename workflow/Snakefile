@@ -36,7 +36,7 @@ COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
 BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
 
 include: "rules/metadata.smk"
-include: "rules/reference.smk"
+include: "rules/download_reference_files.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
