@@ -5,9 +5,13 @@ meta:
   local_path: /home/jupyter/data
 
 
-get_genome:
-  ncbi_ftp: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/146/045/GCF_000146045.2_R64/GCF_000146045.2_R64_genomic.fna.gz
-
+reference:
+  root: resources/reference
+  hg38_fasta_gz: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/analysisSet/hg38.analysisSet.fa.gz
+  hg38_blacklist_bed_gz: https://raw.githubusercontent.com/Boyle-Lab/Blacklist/master/lists/hg38-blacklist.v2.bed.gz
+  lambda_fasta: https://www.encodeproject.org/files/lambda.fa/@@download/lambda.fa
+  puc19_fasta: https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=M77789.2&db=nuccore&report=fasta
+  
 simulate_reads:
   read_length: 100
   read_number: 10000
