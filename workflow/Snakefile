@@ -11,8 +11,32 @@ LOCAL_PATH = Path(config["meta"]["local_path"])
 LOCAL_SAMPLES = LOCAL_PATH / "samples.csv"
 LOCAL_MD5 = LOCAL_PATH / "md5.txt"
 
-include: "rules/metadata.smk"
+# -------------------------
+# reference paths
+# -------------------------
+REF_ROOT = Path(config["reference"]["root"])
+REF_SOURCE = REF_ROOT / "source"
+REF_FASTA = REF_ROOT / "fasta"
+REF_BED = REF_ROOT / "bed"
+REF_BWA = REF_ROOT / "bwa"
 
+HG38_GZ = REF_SOURCE / "hg38.analysisSet.fa.gz"
+BLACKLIST_GZ = REF_SOURCE / "hg38-blacklist.v2.bed.gz"
+
+HG38_FA = REF_FASTA / "hg38.analysisSet.fa"
+LAMBDA_RAW_FA = REF_FASTA / "lambda.fa"
+PUC19_RAW_FA = REF_FASTA / "pUC19.fa"
+
+LAMBDA_RENAMED_FA = REF_FASTA / "lambda.renamed.fa"
+PUC19_RENAMED_FA = REF_FASTA / "pUC19.renamed.fa"
+
+BLACKLIST_BED_GZ = REF_BED / "hg38-blacklist.v2.bed.gz"
+
+COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
+BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
+
+include: "rules/metadata.smk"
+include: "rules/reference.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
@@ -23,9 +47,15 @@ onsuccess:
 onerror:
     print("\n--- An error occurred! ---\n")
 
-
 rule all:
     input:
         str(LOCAL_SAMPLES),
-        str(LOCAL_MD5)
+        str(LOCAL_MD5),
+        str(BLACKLIST_BED_GZ),
+        str(BWA_FA),
+        str(BWA_FA) + ".amb",
+        str(BWA_FA) + ".ann",
+        str(BWA_FA) + ".bwt",
+        str(BWA_FA) + ".pac",
+        str(BWA_FA) + ".sa"
     default_target: True
