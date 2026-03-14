@@ -40,7 +40,7 @@ include: "rules/bwa_index_reference.smk"
 include: "rules/download_reference_files.smk"
 include: "rules/metadata.smk"
 include: "rules/normalize_spikein_headers.smk"
-include: "rules/organize_blacklist.smk
+include: "rules/organize_blacklist.smk"
 include: "rules/unpack_hg38.smk"
 
 onstart:
