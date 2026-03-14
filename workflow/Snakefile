@@ -35,18 +35,13 @@ BLACKLIST_BED_GZ = REF_BED / "hg38-blacklist.v2.bed.gz"
 COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
 BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
 
-include: "rules/metadata.smk"
-include: "rules/download_reference_files.smk"
-include: "rules/unpack_hg38.smk"
-include: "rules/normalize_spikein_headers.smk"
 include: "rules/build_combined_reference.smk"
 include: "rules/bwa_index_reference.smk"
-include: "rules/metadata.smk"
 include: "rules/download_reference_files.smk"
-include: "rules/unpack_hg38.smk"
+include: "rules/metadata.smk"
 include: "rules/normalize_spikein_headers.smk"
-include: "rules/build_combined_reference.smk"
-include: "rules/bwa_index_reference.smk"
+include: "rules/organize_blacklist.smk
+include: "rules/unpack_hg38.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
