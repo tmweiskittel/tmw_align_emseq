@@ -1,3 +1,8 @@
+from pathlib import Path
+
+SAMPLESHEET = Path(DATA_PATH) / SAMPLE_SHEET
+MD5_FILE = Path(DATA_PATH) / MD5_SHEET
+
 rule unpack_hg38:
     input:
         str(HG38_GZ)
@@ -67,11 +72,6 @@ rule download_reference_files:
         curl -L "{params.lambda_url}" -o {output.lambda_fa} >> {log} 2>&1
         curl -L "{params.puc19_url}" -o {output.puc19_fa} >> {log} 2>&1
         """
-
-from pathlib import Path
-
-SAMPLESHEET = Path(DATA_PATH) / SAMPLE_SHEET
-MD5_FILE = Path(DATA_PATH) / MD5_SHEET
 
 rule download_metadata:
     output:
