@@ -2,7 +2,7 @@
 # python packages
 # -------------------------
 from pathlib import Path
-import pandas as pd
+import csv
 
 # -------------------------
 # setting paths
@@ -54,37 +54,38 @@ def get_samples_df():
     ckpt = checkpoints.download_metadata.get()
     samples_file = ckpt.output.samples
 
-    df = pd.read_csv(samples_file)
+    rows = []
 
-    # clean whitespace just in case
-    df["Name"] = df["Name"].astype(str).str.strip()
-    df["R1_file"] = df["R1_file"].astype(str).str.strip().str.lstrip("/")
-    df["R2_file"] = df["R2_file"].astype(str).str.strip().str.lstrip("/")
-    df["Path"] = df["Path"].astype(str).str.strip().str.rstrip("/")
+    with open(samples_file) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            row["Name"] = row["Name"].strip()
+            row["R1_file"] = row["R1_file"].strip().lstrip("/")
+            row["R2_file"] = row["R2_file"].strip().lstrip("/")
+            row["Path"] = row["Path"].strip().rstrip("/")
+            rows.append(row)
 
-    return df
+    return rows
 
 
 def get_sample_names():
-    df = get_samples_df()
-    return df["Name"].tolist()
+    rows = get_samples_df()
+    return [r["Name"] for r in rows]
 
 
 def get_fastq_r1(sample):
-    df = get_samples_df()
-    row = df.loc[df["Name"] == sample]
-    if row.empty:
-        raise ValueError(f"Sample {sample} not found in sample sheet")
-    return f'gs://{row.iloc[0]["Path"]}/{row.iloc[0]["R1_file"]}'
-
+    rows = get_samples_df()
+    for r in rows:
+        if r["Name"] == sample:
+            return f'gs://{r["Path"]}/{r["R1_file"]}'
+    raise ValueError(f"Sample {sample} not found")
 
 def get_fastq_r2(sample):
-    df = get_samples_df()
-    row = df.loc[df["Name"] == sample]
-    if row.empty:
-        raise ValueError(f"Sample {sample} not found in sample sheet")
-    return f'gs://{row.iloc[0]["Path"]}/{row.iloc[0]["R2_file"]}'
-
+    rows = get_samples_df()
+    for r in rows:
+        if r["Name"] == sample:
+            return f'gs://{r["Path"]}/{r["R2_file"]}'
+    raise ValueError(f"Sample {sample} not found")
 
 def all_fastp_outputs(wildcards):
     samples = get_sample_names()
