@@ -93,13 +93,6 @@ onerror:
 
 rule all:
     input:
-        str(LOCAL_SAMPLES),
-        str(LOCAL_MD5),
-        str(BLACKLIST_BED_GZ),
-        str(BWA_FA),
-        str(BWA_FA) + ".amb",
-        str(BWA_FA) + ".ann",
-        str(BWA_FA) + ".bwt",
-        str(BWA_FA) + ".pac",
-        str(BWA_FA) + ".sa"
+        expand(str(QC_DIR / "fastp" / "{sample}.fastp.html"), sample=SAMPLE_NAMES),
+        expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=SAMPLE_NAMES)
     default_target: True
