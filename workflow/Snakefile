@@ -35,7 +35,7 @@ BLACKLIST_BED_GZ = REF_BED / "hg38-blacklist.v2.bed.gz"
 COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
 BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
 
-include: "rules/references_combined.smk
+include: "rules/references_combined.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
