@@ -71,6 +71,7 @@ FASTQ_R2 = {
 # including rules
 # -------------------------
 include: "rules/references_combined.smk"
+include: "rules/downlooad_samples.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
