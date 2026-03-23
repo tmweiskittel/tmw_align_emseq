@@ -73,7 +73,7 @@ rule download_reference_files:
         curl -L "{params.puc19_url}" -o {output.puc19_fa} >> {log} 2>&1
         """
 
-rule download_metadata:
+checkpoint download_metadata:
     output:
         samples=str(LOCAL_SAMPLES),
         md5=str(LOCAL_MD5)
@@ -81,10 +81,11 @@ rule download_metadata:
         samples=str(SAMPLESHEET),
         md5=str(MD5_FILE)
     log:
-        "logs/download_metadata.log"
+        str(LOCAL_PATH / "logs" / "download_metadata.log")
     shell:
         r"""
-        mkdir -p {LOCAL_PATH} logs
+        set -euo pipefail
+        mkdir -p {LOCAL_PATH} {LOCAL_PATH}/logs
         gcloud storage cp gs://{params.samples} {output.samples} > {log} 2>&1
         gcloud storage cp gs://{params.md5} {output.md5} >> {log} 2>&1
         """
