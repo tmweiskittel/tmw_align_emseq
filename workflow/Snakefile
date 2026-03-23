@@ -42,6 +42,11 @@ BLACKLIST_BED_GZ = REF_BED / "hg38-blacklist.v2.bed.gz"
 COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
 BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
 
+LOCAL_PATH = Path(config["meta"]["local_path"])
+FASTQ_DIR = LOCAL_PATH / "fastq"
+TRIMMED_DIR = LOCAL_PATH / "trimmed"
+BAM_DIR = LOCAL_PATH / "bam"
+QC_DIR = LOCAL_PATH / "qc"
 # -------------------------
 # sample parsing
 # -------------------------
