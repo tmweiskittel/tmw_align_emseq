@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 # -------------------------
-# setting paths 
+# setting paths
 # -------------------------
 configfile: "config/config.yaml"
 
@@ -17,6 +17,11 @@ LOCAL_PATH = Path(config["meta"]["local_path"])
 
 LOCAL_SAMPLES = LOCAL_PATH / "samples.csv"
 LOCAL_MD5 = LOCAL_PATH / "md5.txt"
+
+FASTQ_DIR = LOCAL_PATH / "fastq"
+TRIMMED_DIR = LOCAL_PATH / "trimmed"
+BAM_DIR = LOCAL_PATH / "bam"
+QC_DIR = LOCAL_PATH / "qc"
 
 # -------------------------
 # reference paths
@@ -42,41 +47,57 @@ BLACKLIST_BED_GZ = REF_BED / "hg38-blacklist.v2.bed.gz"
 COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
 BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
 
-LOCAL_PATH = Path(config["meta"]["local_path"])
-FASTQ_DIR = LOCAL_PATH / "fastq"
-TRIMMED_DIR = LOCAL_PATH / "trimmed"
-BAM_DIR = LOCAL_PATH / "bam"
-QC_DIR = LOCAL_PATH / "qc"
 # -------------------------
-# sample parsing
+# sample parsing via checkpoint
 # -------------------------
-FASTQ_DIR = LOCAL_PATH / "fastq"
+def get_samples_df():
+    ckpt = checkpoints.download_metadata.get()
+    samples_file = ckpt.output.samples
 
-samples_df = pd.read_csv(LOCAL_SAMPLES)
+    df = pd.read_csv(samples_file)
 
-# clean whitespace just in case
-samples_df["Name"] = samples_df["Name"].astype(str).str.strip()
-samples_df["R1_file"] = samples_df["R1_file"].astype(str).str.strip().str.lstrip("/")
-samples_df["R2_file"] = samples_df["R2_file"].astype(str).str.strip().str.lstrip("/")
-samples_df["Path"] = samples_df["Path"].astype(str).str.strip().str.rstrip("/")
+    # clean whitespace just in case
+    df["Name"] = df["Name"].astype(str).str.strip()
+    df["R1_file"] = df["R1_file"].astype(str).str.strip().str.lstrip("/")
+    df["R2_file"] = df["R2_file"].astype(str).str.strip().str.lstrip("/")
+    df["Path"] = df["Path"].astype(str).str.strip().str.rstrip("/")
 
-SAMPLE_NAMES = samples_df["Name"].tolist()
+    return df
 
-FASTQ_R1 = {
-    row["Name"]: f'gs://{row["Path"]}/{row["R1_file"]}'
-    for _, row in samples_df.iterrows()
-}
 
-FASTQ_R2 = {
-    row["Name"]: f'gs://{row["Path"]}/{row["R2_file"]}'
-    for _, row in samples_df.iterrows()
-}
+def get_sample_names():
+    df = get_samples_df()
+    return df["Name"].tolist()
+
+
+def get_fastq_r1(sample):
+    df = get_samples_df()
+    row = df.loc[df["Name"] == sample]
+    if row.empty:
+        raise ValueError(f"Sample {sample} not found in sample sheet")
+    return f'gs://{row.iloc[0]["Path"]}/{row.iloc[0]["R1_file"]}'
+
+
+def get_fastq_r2(sample):
+    df = get_samples_df()
+    row = df.loc[df["Name"] == sample]
+    if row.empty:
+        raise ValueError(f"Sample {sample} not found in sample sheet")
+    return f'gs://{row.iloc[0]["Path"]}/{row.iloc[0]["R2_file"]}'
+
+
+def all_fastp_outputs(wildcards):
+    samples = get_sample_names()
+    return (
+        expand(str(QC_DIR / "fastp" / "{sample}.fastp.html"), sample=samples)
+        + expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=samples)
+    )
 
 # -------------------------
 # including rules
 # -------------------------
 include: "rules/references_combined.smk"
-include: "rules/downlooad_samples.smk"
+include: "rules/download_samples.smk"
 include: "rules/fastp_trimming.smk"
 
 onstart:
@@ -91,9 +112,7 @@ onerror:
 # -------------------------
 # rule all
 # -------------------------
-
 rule all:
     input:
-        expand(str(QC_DIR / "fastp" / "{sample}.fastp.html"), sample=SAMPLE_NAMES),
-        expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=SAMPLE_NAMES)
+        all_fastp_outputs
     default_target: True
