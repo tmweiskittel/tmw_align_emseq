@@ -3,8 +3,8 @@ rule download_fastqs:
         r1=temp(str(FASTQ_DIR / "{sample}.R1.fastq.gz")),
         r2=temp(str(FASTQ_DIR / "{sample}.R2.fastq.gz"))
     params:
-        r1=lambda wc: FASTQ_R1[wc.sample],
-        r2=lambda wc: FASTQ_R2[wc.sample]
+        r1=lambda wc: get_fastq_r1(wc.sample),
+        r2=lambda wc: get_fastq_r2(wc.sample)
     log:
         str(LOCAL_PATH / "logs" / "download_fastqs" / "{sample}.log")
     shell:
