@@ -50,20 +50,30 @@ BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
 # -------------------------
 # sample parsing via checkpoint
 # -------------------------
+
 def get_samples_df():
     ckpt = checkpoints.download_metadata.get()
     samples_file = ckpt.output.samples
 
     rows = []
-
-    with open(samples_file) as f:
+    with open(samples_file, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
+
+        # normalize header names once
+        reader.fieldnames = [h.strip() for h in reader.fieldnames]
+
         for row in reader:
-            row["Name"] = row["Name"].strip()
-            row["R1_file"] = row["R1_file"].strip().lstrip("/")
-            row["R2_file"] = row["R2_file"].strip().lstrip("/")
-            row["Path"] = row["Path"].strip().rstrip("/")
-            rows.append(row)
+            clean_row = {}
+            for k, v in row.items():
+                if k is None:
+                    continue
+                clean_row[k.strip()] = v.strip() if v is not None else ""
+
+            clean_row["R1_file"] = clean_row["R1_file"].lstrip("/")
+            clean_row["R2_file"] = clean_row["R2_file"].lstrip("/")
+            clean_row["Path"] = clean_row["Path"].rstrip("/")
+
+            rows.append(clean_row)
 
     return rows
 
@@ -78,14 +88,15 @@ def get_fastq_r1(sample):
     for r in rows:
         if r["Name"] == sample:
             return f'gs://{r["Path"]}/{r["R1_file"]}'
-    raise ValueError(f"Sample {sample} not found")
+    raise ValueError(f"Sample {sample} not found in sample sheet")
+
 
 def get_fastq_r2(sample):
     rows = get_samples_df()
     for r in rows:
         if r["Name"] == sample:
             return f'gs://{r["Path"]}/{r["R2_file"]}'
-    raise ValueError(f"Sample {sample} not found")
+    raise ValueError(f"Sample {sample} not found in sample sheet")
 
 def all_fastp_outputs(wildcards):
     samples = get_sample_names()
