@@ -98,13 +98,6 @@ def get_fastq_r2(sample):
             return f'gs://{r["Path"]}/{r["R2_file"]}'
     raise ValueError(f"Sample {sample} not found in sample sheet")
 
-def all_fastp_outputs(wildcards):
-    samples = get_sample_names()
-    return (
-        expand(str(QC_DIR / "fastp" / "{sample}.fastp.html"), sample=samples)
-        + expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=samples)
-    )
-
 # -------------------------
 # including rules
 # -------------------------
@@ -124,7 +117,17 @@ onerror:
 # -------------------------
 # rule all
 # -------------------------
+def all_current_outputs(wildcards):
+    samples = get_sample_names()
+    return (
+        expand(str(QC_DIR / "fastp" / "{sample}.fastp.html"), sample=samples)
+        + expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=samples)
+        + expand(str(BAM_DIR / "{sample}.aligned.sorted.bam"), sample=samples)
+        + expand(str(BAM_DIR / "{sample}.aligned.sorted.bam.bai"), sample=samples)
+    )
+
 rule all:
     input:
-        all_fastp_outputs
+        all_current_outputs
     default_target: True
+
