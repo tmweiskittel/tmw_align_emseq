@@ -11,6 +11,8 @@ rule bwameth_align:
     output:
         bam=str(BAM_DIR / "{sample}.aligned.sorted.bam"),
         bai=str(BAM_DIR / "{sample}.aligned.sorted.bam.bai")
+    conda:
+        "../envs/bwameth.yaml"    
     params:
         bwameth_threads=12,
         sort_threads=4
