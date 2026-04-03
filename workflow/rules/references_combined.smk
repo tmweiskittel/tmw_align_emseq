@@ -101,7 +101,7 @@ rule bwa_index_reference:
         pac=str(BWA_FA) + ".pac",
         sa=str(BWA_FA) + ".sa"
     conda:
-        "../envs/bwa.yaml"
+        "../envs/bwameth.yaml"
     threads: 4
     log:
         "logs/bwa_index_reference.log"
