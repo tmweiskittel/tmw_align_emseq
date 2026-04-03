@@ -105,7 +105,7 @@ include: "rules/references_combined.smk"
 include: "rules/download_samples.smk"
 include: "rules/fastp_trimming.smk"
 include: "rules/alignment.smk"
-
+include: "rules/bam_cleanup.smk"
 onstart:
     print("\n--- Analysis started ---\n")
 
