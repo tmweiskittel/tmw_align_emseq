@@ -26,7 +26,8 @@ rule organize_blacklist:
     shell:
         r"""
         set -euo pipefail
-        cp {input} {output} 2> {log}
+        mkdir -p {REF_BED} {LOCAL_PATH}/logs
+        gunzip -c {input} > {output} 2> {log}
         """
 
 rule normalize_spikein_headers:
