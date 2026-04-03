@@ -110,7 +110,7 @@ rule bwa_index_reference:
         set -euo pipefail
         mkdir -p {REF_BWA}
         cp {input} {output.fa}
-        bwa index {output.fa} > {log} 2>&1
+        bwameth.py index {output.fa} > {log} 2>&1
         """
 
 rule build_combined_reference:
