@@ -20,7 +20,7 @@ rule organize_blacklist:
     input:
         str(BLACKLIST_GZ)
     output:
-        str(BLACKLIST_BED_GZ)
+        str(BLACKLIST_BED)
     log:
         "logs/organize_blacklist.log"
     shell:
