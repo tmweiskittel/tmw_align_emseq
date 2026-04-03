@@ -1,72 +1,52 @@
-rule sort_bam:
-    input:
-        bam=str(BAM_DIR / "{sample}.bam")
-    output:
-        bam=str(BAM_DIR / "{sample}.sorted.bam")
-    threads: 8
-    log:
-        "logs/sort/{sample}.log"
-    shell:
-        """
-        samtools sort -@ {threads} -o {output.bam} {input.bam} \
-        > {log} 2>&1
-        """
 rule filter_bam:
     input:
-        bam=str(BAM_DIR / "{sample}.sorted.bam")
+        bam=str(BAM_DIR / "{sample}.aligned.sorted.bam")
     output:
-        bam=str(BAM_DIR / "{sample}.sorted.filt.bam")
+        bam=temp(str(BAM_DIR / "{sample}.aligned.sorted.filt.bam"))
     threads: 8
     log:
-        "logs/filter/{sample}.filter.log"
+        str(LOCAL_PATH / "logs" / "filter_bam" / "{sample}.log")
     shell:
         r"""
-        mkdir -p $(dirname {output.bam}) $(dirname {log})
+        set -euo pipefail
+        mkdir -p {BAM_DIR} {LOCAL_PATH}/logs/filter_bam
+
         samtools view -@ {threads} -u -f 2 -q 30 -F 3840 {input.bam} \
           | samtools sort -@ {threads} -o {output.bam} - \
           > {log} 2>&1
         """
-        
+
 rule index_filtered_bam:
     input:
-        bam=str(BAM_DIR / "{sample}.sorted.filt.bam")
+        bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bam")
     output:
-        bai=str(BAM_DIR / "{sample}.sorted.filt.bam.bai")
+        bai=temp(str(BAM_DIR / "{sample}.aligned.sorted.filt.bam.bai"))
     log:
-        "logs/index/{sample}.sorted.filt.index.log"
+        str(LOCAL_PATH / "logs" / "index_filtered_bam" / "{sample}.log")
     shell:
         r"""
-        mkdir -p $(dirname {output.bai}) $(dirname {log})
-        samtools index {input.bam} > {log} 2>&1
+        set -euo pipefail
+        mkdir -p {LOCAL_PATH}/logs/index_filtered_bam
+
+        samtools index {input.bam} {output.bai} > {log} 2>&1
         """
 
-  rule blacklist_filter_bam:
+rule blacklist_filter_bam:
     input:
-        bam=str(BAM_DIR / "{sample}.sorted.filt.bam"),
-        bai=str(BAM_DIR / "{sample}.sorted.filt.bam.bai"),
-        blacklist=config["ref"]["blacklist"]
+        bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bam"),
+        bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bam.bai"),
+        blacklist=str(BLACKLIST_BED)
     output:
-        bam=str(BAM_DIR / "{sample}.sorted.filt.bl.bam")
+        bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam")
     threads: 8
     log:
-        "logs/blacklist/{sample}.blacklist.log"
+        str(DATA_LOG_DIR / "blacklist_filter_bam" / "{sample}.log")
     shell:
         r"""
-        mkdir -p $(dirname {output.bam}) $(dirname {log})
+        set -euo pipefail
+        mkdir -p {BAM_DIR} {DATA_LOG_DIR}/blacklist_filter_bam
+
         bedtools intersect -abam {input.bam} -b {input.blacklist} -v \
           | samtools sort -@ {threads} -o {output.bam} - \
           > {log} 2>&1
-        """
-
-rule index_blacklist_filtered_bam:
-    input:
-        bam=str(BAM_DIR / "{sample}.sorted.filt.bl.bam")
-    output:
-        bai=str(BAM_DIR / "{sample}.sorted.filt.bl.bam.bai")
-    log:
-        "logs/index/{sample}.sorted.filt.bl.index.log"
-    shell:
-        r"""
-        mkdir -p $(dirname {output.bai}) $(dirname {log})
-        samtools index {input.bam} > {log} 2>&1
         """
