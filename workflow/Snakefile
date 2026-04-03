@@ -42,7 +42,7 @@ PUC19_RAW_FA = REF_FASTA / "pUC19.fa"
 LAMBDA_RENAMED_FA = REF_FASTA / "lambda.renamed.fa"
 PUC19_RENAMED_FA = REF_FASTA / "pUC19.renamed.fa"
 
-BLACKLIST_BED_GZ = REF_BED / "hg38-blacklist.v2.bed.gz"
+BLACKLIST_BED = REF_BED / "hg38-blacklist.v2.bed"
 
 COMBINED_FA = REF_FASTA / "hg38_plus_spikeins.fa"
 BWA_FA = REF_BWA / "hg38_plus_spikeins.fa"
