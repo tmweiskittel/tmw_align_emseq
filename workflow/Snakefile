@@ -127,6 +127,8 @@ def all_current_outputs(wildcards):
         + expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=samples)
         + expand(str(BAM_DIR / "{sample}.aligned.sorted.bam"), sample=samples)
         + expand(str(BAM_DIR / "{sample}.aligned.sorted.bam.bai"), sample=samples)
+        + expand(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam"), sample=samples)
+        + expand(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"), sample=samples)
     )
 
 rule all:
