@@ -108,8 +108,11 @@ rule bwa_index_reference:
         r"""
         set -euo pipefail
         mkdir -p {REF_BWA}
+
+        rm -f {REF_BWA}/hg38_plus_spikeins.fa*
         cp {input} {output.fa}
-        bwameth.py index {output.fa} > {log} 2>&1
+
+        bwameth.py index-mem2 {output.fa} > {log} 2>&1
         touch {output.done}
         """
 
