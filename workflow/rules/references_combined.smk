@@ -72,6 +72,8 @@ rule download_reference_files:
         curl -L "{params.blacklist_url}" -o {output.blacklist_gz} >> {log} 2>&1
         curl -L "{params.lambda_url}" -o {output.lambda_fa} >> {log} 2>&1
         curl -L "{params.puc19_url}" -o {output.puc19_fa} >> {log} 2>&1
+        grep -q '^>' {output.lambda_fa} || (echo "Lambda download not FASTA" && exit 1)
+        grep -q '^>' {output.puc19_fa} || (echo "pUC19 download not FASTA" && exit 1)
         """
 
 checkpoint download_metadata:
