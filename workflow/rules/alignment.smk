@@ -10,9 +10,9 @@ rule bwameth_align:
     conda:
         "../envs/bwameth.yaml"
     params:
-        bwameth_threads=12,
+        bwameth_threads=16,
         sort_threads=4
-    threads: 16
+    threads: 20
     log:
         str(LOCAL_PATH / "logs" / "bwameth_align" / "{sample}.log")
     shell:
