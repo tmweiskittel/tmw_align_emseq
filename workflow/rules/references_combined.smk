@@ -96,11 +96,7 @@ rule bwa_index_reference:
         str(COMBINED_FA)
     output:
         fa=str(BWA_FA),
-        amb=str(BWA_FA) + ".amb",
-        ann=str(BWA_FA) + ".ann",
-        bwt=str(BWA_FA) + ".bwt",
-        pac=str(BWA_FA) + ".pac",
-        sa=str(BWA_FA) + ".sa"
+        done=str(REF_BWA / "hg38_plus_spikeins.bwameth_index.done")
     conda:
         "../envs/bwameth.yaml"
     threads: 4
@@ -112,6 +108,7 @@ rule bwa_index_reference:
         mkdir -p {REF_BWA}
         cp {input} {output.fa}
         bwameth.py index {output.fa} > {log} 2>&1
+        touch {output.done}
         """
 
 rule build_combined_reference:
