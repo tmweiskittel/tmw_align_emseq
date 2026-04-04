@@ -3,20 +3,16 @@ rule bwameth_align:
         r1=str(TRIMMED_DIR / "{sample}.trimmed.R1.fastq.gz"),
         r2=str(TRIMMED_DIR / "{sample}.trimmed.R2.fastq.gz"),
         ref=str(BWA_FA),
-        amb=str(BWA_FA) + ".amb",
-        ann=str(BWA_FA) + ".ann",
-        bwt=str(BWA_FA) + ".bwt",
-        pac=str(BWA_FA) + ".pac",
-        sa=str(BWA_FA) + ".sa"
+        ref_index_done=str(REF_BWA / "hg38_plus_spikeins.bwameth_index.done")
     output:
         bam=str(BAM_DIR / "{sample}.aligned.sorted.bam"),
         bai=str(BAM_DIR / "{sample}.aligned.sorted.bam.bai")
     conda:
-        "../envs/bwameth.yaml"    
+        "../envs/bwameth.yaml"
     params:
-        bwameth_threads=20,
+        bwameth_threads=12,
         sort_threads=4
-    threads: 24
+    threads: 16
     log:
         str(LOCAL_PATH / "logs" / "bwameth_align" / "{sample}.log")
     shell:
