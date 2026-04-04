@@ -40,7 +40,7 @@ rule blacklist_filter_bam:
         bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam")
     threads: 8
     log:
-        str(DATA_LOG_DIR / "blacklist_filter_bam" / "{sample}.log")
+        str(LOCAL_PATH / "logs" / "blacklist_filter_bam" / "{sample}.log")
     shell:
         r"""
         set -euo pipefail
