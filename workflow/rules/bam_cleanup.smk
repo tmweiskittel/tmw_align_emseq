@@ -28,7 +28,7 @@ rule blacklist_filter_bam:
     shell:
         r"""
         set -euo pipefail
-        mkdir -p {BAM_DIR} {DATA_LOG_DIR}/blacklist_filter_bam
+        mkdir -p {BAM_DIR} $(dirname {log})
 
         bedtools intersect -abam {input.bam} -b {input.blacklist} -v \
           | samtools sort -@ {threads} -o {output.bam} - \
