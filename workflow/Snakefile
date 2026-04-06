@@ -113,6 +113,7 @@ include: "rules/alignment.smk"
 include: "rules/bam_cleanup.smk"
 include: "rules/methylation.smk"
 include: "rules/qc_report.smk"
+include: "rules/coverage_qc.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
