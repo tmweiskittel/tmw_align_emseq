@@ -20,16 +20,15 @@ rule methyldackel_extract:
         MethylDackel extract \
             -@ {threads} \
             --methylKit \
-            --gzip \
             --mergeContext \
             --minDepth 5 \
             --maxVariantFrac 0.5 \
+            --gzip \
             -o {params.prefix} \
             {input.ref} \
             {input.bam} \
             > {log} 2>&1
         """
-
 
 rule methyldackel_mbias:
     input:
@@ -37,7 +36,9 @@ rule methyldackel_mbias:
         bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"),
         ref=str(BWA_FA)
     output:
-        txt=str(MBIAS_DIR / "{sample}.aligned.sorted.filt.bl_methyldackel.M-bias.txt")
+        txt=str(MBIAS_DIR / "{sample}.M-bias.txt")
+    params:
+        prefix=str(MBIAS_DIR / "{sample}")
     conda:
         "../envs/methyldackel.yaml"
     threads: 8
@@ -50,8 +51,9 @@ rule methyldackel_mbias:
 
         MethylDackel mbias \
             -@ {threads} \
-            -o {MBIAS_DIR}/{wildcards.sample}.aligned.sorted.filt.bl_methyldackel \
+            -o {params.prefix} \
             {input.ref} \
             {input.bam} \
             > {log} 2>&1
         """
+
