@@ -4,7 +4,7 @@ rule methyldackel_extract:
         bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"),
         ref=str(BWA_FA)
     output:
-        cpg=str(METH_DIR / "{sample}.CpG.methylKit")
+        cpg=str(METH_DIR / "{sample}.CpG.methylKit.gz")
     params:
         prefix=str(METH_DIR / "{sample}")
     conda:
@@ -20,6 +20,7 @@ rule methyldackel_extract:
         MethylDackel extract \
             -@ {threads} \
             --methylKit \
+            --gzip \
             --mergeContext \
             --minDepth 5 \
             --maxVariantFrac 0.5 \
