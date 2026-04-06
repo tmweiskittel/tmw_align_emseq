@@ -26,6 +26,7 @@ METH_DIR = LOCAL_PATH / "meth"
 MBIAS_DIR = QC_DIR / "mbias"
 SUMMARY_DIR = QC_DIR / "summary"
 SPIKEIN_DIR = QC_DIR / "spikein"
+COVERAGE_DIR = QC_DIR / "coverage"
 
 # -------------------------
 # reference paths
@@ -139,6 +140,7 @@ def all_current_outputs(wildcards):
         + expand(str(METH_DIR / "{sample}.aligned.sorted.filt.bl_methyldackel_CpG.methylKit.gz"), sample=samples)
         + expand(str(MBIAS_DIR / "{sample}.aligned.sorted.filt.bl_methyldackel.M-bias.txt"), sample=samples)
         + expand(str(SUMMARY_DIR / "{sample}.qc_summary.tsv"), sample=samples)
+        + expand(str(SPIKEIN_DIR / "{sample}.lambda_qc.tsv"), sample=samples)
     )
 
 rule all:
