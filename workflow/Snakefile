@@ -24,6 +24,8 @@ BAM_DIR = LOCAL_PATH / "bam"
 QC_DIR = LOCAL_PATH / "qc"
 METH_DIR = LOCAL_PATH / "meth"
 MBIAS_DIR = QC_DIR / "mbias"
+SUMMARY_DIR = QC_DIR / "summary"
+SPIKEIN_DIR = QC_DIR / "spikein"
 
 # -------------------------
 # reference paths
