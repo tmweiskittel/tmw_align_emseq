@@ -111,6 +111,7 @@ include: "rules/fastp_trimming.smk"
 include: "rules/alignment.smk"
 include: "rules/bam_cleanup.smk"
 include: "rules/methylation.smk"
+include: "rules/qc_report.smk"
 
 onstart:
     print("\n--- Analysis started ---\n")
@@ -137,7 +138,7 @@ def all_current_outputs(wildcards):
         + expand(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"), sample=samples)
         + expand(str(METH_DIR / "{sample}.aligned.sorted.filt.bl_methyldackel_CpG.methylKit.gz"), sample=samples)
         + expand(str(MBIAS_DIR / "{sample}.aligned.sorted.filt.bl_methyldackel.M-bias.txt"), sample=samples)
-
+        + expand(str(SUMMARY_DIR / "{sample}.qc_summary.tsv"), sample=samples)
     )
 
 rule all:
