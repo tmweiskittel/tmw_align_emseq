@@ -22,6 +22,8 @@ FASTQ_DIR = LOCAL_PATH / "fastq"
 TRIMMED_DIR = LOCAL_PATH / "trimmed"
 BAM_DIR = LOCAL_PATH / "bam"
 QC_DIR = LOCAL_PATH / "qc"
+METH_DIR = LOCAL_PATH / "meth"
+MBIAS_DIR = QC_DIR / "mbias"
 
 # -------------------------
 # reference paths
