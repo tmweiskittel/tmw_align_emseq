@@ -4,7 +4,9 @@ rule methyldackel_extract:
         bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"),
         ref=str(BWA_FA)
     output:
-        cpg=str(METH_DIR / "{sample}.aligned.sorted.filt.bl_methyldackel_CpG.methylKit")
+        cpg=str(METH_DIR / "{sample}.CpG.methylKit")
+    params:
+        prefix=str(METH_DIR / "{sample}")
     conda:
         "../envs/methyldackel.yaml"
     threads: 8
@@ -21,11 +23,12 @@ rule methyldackel_extract:
             --mergeContext \
             --minDepth 5 \
             --maxVariantFrac 0.5 \
-            -o {METH_DIR}/{wildcards.sample}.aligned.sorted.filt.bl_methyldackel \
+            -o {params.prefix} \
             {input.ref} \
             {input.bam} \
             > {log} 2>&1
         """
+
 
 rule methyldackel_mbias:
     input:
