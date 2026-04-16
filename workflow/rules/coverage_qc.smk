@@ -10,7 +10,7 @@ rule coverage_qc:
         set -euo pipefail
         mkdir -p {COVERAGE_DIR} $(dirname {log})
 
-        python - <<'PY' > {log} 2>&1
+        python3 - <<'PY' > {log} 2>&1
 import gzip
 import csv
 import statistics
