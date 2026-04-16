@@ -20,7 +20,6 @@ rule methyldackel_extract:
         MethylDackel extract \
             -@ {threads} \
             --methylKit \
-            --mergeContext \
             --minDepth 5 \
             --maxVariantFrac 0.5 \
             -o {params.prefix} \
