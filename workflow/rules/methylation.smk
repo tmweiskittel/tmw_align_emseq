@@ -51,9 +51,12 @@ rule methyldackel_mbias:
 
         MethylDackel mbias \
             -@ {threads} \
-            -o {params.prefix} \
             {input.ref} \
             {input.bam} \
             > {log} 2>&1
+        
+        mbias_file=$(find . -maxdepth 1 -type f -name "*.M-bias.txt" | head -n 1)
+        test -n "$mbias_file"
+        mv "$mbias_file" {wildcards.sample}.M-bias.txt
         """
 
