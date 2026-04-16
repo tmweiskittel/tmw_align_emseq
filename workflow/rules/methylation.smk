@@ -23,11 +23,12 @@ rule methyldackel_extract:
             --mergeContext \
             --minDepth 5 \
             --maxVariantFrac 0.5 \
-            --gzip \
             -o {params.prefix} \
             {input.ref} \
             {input.bam} \
             > {log} 2>&1
+        gzip -f {params.prefix}_CpG.methylKit
+        mv {params.prefix}_CpG.methylKit.gz {output.cpg}
         """
 
 rule methyldackel_mbias:
