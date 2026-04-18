@@ -9,7 +9,7 @@ rule sample_qc_summary:
         lambda_qc=str(SPIKEIN_DIR / "{sample}.lambda_qc.tsv"),
         coverage_qc=str(COVERAGE_DIR / "{sample}.coverage_qc.tsv")
     output:
-        tsv=str(SUMMARY_DIR / "{sample}.qc_summary.tsv")
+        tsv=temp(str(SUMMARY_DIR / "{sample}.qc_summary.tsv"))
     log:
         str(LOCAL_PATH / "logs" / "sample_qc_summary" / "{sample}.log")
     conda:
