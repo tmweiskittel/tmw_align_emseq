@@ -133,20 +133,7 @@ onerror:
 #  need to define outputs in a function because when we pull samples from an external file you cannot immediately know all samples. Sample list must be generated after checkpoint runs that downloads the sample file
 def all_current_outputs(wildcards):
     samples = get_sample_names()
-    return (
-        expand(str(QC_DIR / "fastp" / "{sample}.fastp.html"), sample=samples)
-        + expand(str(QC_DIR / "fastp" / "{sample}.fastp.json"), sample=samples)
-        + expand(str(BAM_DIR / "{sample}.aligned.sorted.bam"), sample=samples)
-        + expand(str(BAM_DIR / "{sample}.aligned.sorted.bam.bai"), sample=samples)
-        + expand(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam"), sample=samples)
-        + expand(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"), sample=samples)
-        + expand(str(METH_DIR / "{sample}.CpG.methylKit.gz"), sample=samples)
-        + expand(str(MBIAS_DIR / "{sample}_OT.svg"), sample=samples)
-        + expand(str(MBIAS_DIR / "{sample}_OB.svg"), sample=samples)
-        + expand(str(SUMMARY_DIR / "{sample}.qc_summary.tsv"), sample=samples)
-        + expand(str(COVERAGE_DIR / "{sample}.coverage_qc.tsv"), sample=samples)
-        + expand(str(SPIKEIN_DIR / "{sample}.lambda_qc.tsv"), sample=samples)
-    )
+    return expand(str(UPLOAD_DIR / "{sample}.upload.done"), sample=samples)
 
 rule all:
     input:
