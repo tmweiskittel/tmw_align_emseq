@@ -2,7 +2,7 @@ rule coverage_qc:
     input:
         cpg=str(METH_DIR / "{sample}.CpG.methylKit.gz")
     output:
-        tsv=str(COVERAGE_DIR / "{sample}.coverage_qc.tsv")
+        tsv=temp(str(COVERAGE_DIR / "{sample}.coverage_qc.tsv"))
     log:
         str(LOCAL_PATH / "logs" / "coverage_qc" / "{sample}.log")
     shell:
