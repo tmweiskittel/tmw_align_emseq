@@ -21,7 +21,7 @@ rule blacklist_filter_bam:
         bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bam"),
         blacklist=str(BLACKLIST_BED)
     output:
-        bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam")
+        bam=temp(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam"))
     threads: 8
     log:
         str(LOCAL_PATH / "logs" / "blacklist_filter_bam" / "{sample}.log")
@@ -39,7 +39,7 @@ rule index_blacklist_filtered_bam:
     input:
         bam=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam")
     output:
-        bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai")
+        bai=temp(str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"))
     log:
         str(LOCAL_PATH / "logs" / "index_blacklist_filtered_bam" / "{sample}.log")
     shell:
