@@ -13,7 +13,6 @@ rule coverage_qc:
         python3 - <<'PY' > {log} 2>&1
 import gzip
 import csv
-import statistics
 
 cpg_file = "{input.cpg}"
 out_file = "{output.tsv}"
@@ -63,8 +62,16 @@ median_coverage = "NA"
 mean_methylation_fraction = "NA"
 
 if coverages:
-    mean_coverage = f"{statistics.mean(coverages):.6f}"
-    median_coverage = f"{statistics.median(coverages):.6f}"
+    mean_coverage = f"{sum(coverages) / len(coverages):.6f}"
+
+    sorted_cov = sorted(coverages)
+    n = len(sorted_cov)
+    mid = n // 2
+    if n % 2 == 1:
+        median_val = sorted_cov[mid]
+    else:
+        median_val = (sorted_cov[mid - 1] + sorted_cov[mid]) / 2
+    median_coverage = f"{median_val:.6f}"
 
 if meth_sum + unmeth_sum > 0:
     mean_methylation_fraction = f"{meth_sum / (meth_sum + unmeth_sum):.6f}"
