@@ -3,7 +3,8 @@ meta:
   sample_sheet: radnec_test.csv
   md5_sheet: MD5.txt
   local_path: /home/jupyter/data
-
+  results_bucket: weiskittel-projects1
+  results_prefix: radnecrosis/processed
 
 reference:
   root: resources/reference
