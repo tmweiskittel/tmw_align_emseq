@@ -38,11 +38,11 @@ def run_cmd(cmd):
 with open(fastp_json) as fh:
     fastp = json.load(fh)
 
-summary_before = fastp.get("summary", {}).get("before_filtering", {})
-summary_after = fastp.get("summary", {}).get("after_filtering", {})
-duplication = fastp.get("duplication", {})
-insert_size = fastp.get("insert_size", {})
-filtering_result = fastp.get("filtering_result", {})
+summary_before = fastp.get("summary", {{}}).get("before_filtering", {{}})
+summary_after = fastp.get("summary", {{}}).get("after_filtering", {{}})
+duplication = fastp.get("duplication", {{}})
+insert_size = fastp.get("insert_size", {{}})
+filtering_result = fastp.get("filtering_result", {{}})
 
 # BAM metrics
 raw_reads = int(run_cmd(f"samtools view -c {raw_bam}"))
@@ -81,7 +81,7 @@ for line in idxstats_output.splitlines():
         human_reads += mapped
 
 # lambda QC
-lambda_metrics = {}
+lambda_metrics = {{}}
 with open(lambda_qc_file, newline="") as fh:
     reader = csv.DictReader(fh, delimiter="\t")
     for row in reader:
@@ -89,7 +89,7 @@ with open(lambda_qc_file, newline="") as fh:
         break
 
 # coverage QC
-coverage_metrics = {}
+coverage_metrics = {{}}
 with open(coverage_qc_file, newline="") as fh:
     reader = csv.DictReader(fh, delimiter="\t")
     for row in reader:
@@ -157,7 +157,7 @@ fieldnames = [
     "lambda_mean_methylation_fraction"
 ]
 
-row = {
+row = {{
     "sample": sample,
 
     "fastp_before_total_reads": summary_before.get("total_reads", "NA"),
@@ -216,7 +216,7 @@ row = {
     "lambda_methylated_counts": lambda_metrics.get("lambda_methylated_counts", "NA"),
     "lambda_unmethylated_counts": lambda_metrics.get("lambda_unmethylated_counts", "NA"),
     "lambda_mean_methylation_fraction": lambda_metrics.get("lambda_mean_methylation_fraction", "NA"),
-}
+}}
 
 with open(out_file, "w", newline="") as out_fh:
     writer = csv.DictWriter(out_fh, fieldnames=fieldnames, delimiter="\t")
