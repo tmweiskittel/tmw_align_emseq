@@ -1,0 +1,7 @@
+name: qc_py
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - samtools=1.19
