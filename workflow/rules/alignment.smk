@@ -5,8 +5,8 @@ rule bwameth_align:
         ref=str(BWA_FA),
         ref_index_done=str(REF_BWA / "hg38_plus_spikeins.bwameth_index.done")
     output:
-        bam=str(BAM_DIR / "{sample}.aligned.sorted.bam"),
-        bai=str(BAM_DIR / "{sample}.aligned.sorted.bam.bai")
+        bam=temp(str(BAM_DIR / "{sample}.aligned.sorted.bam")),
+        bai=temp(str(BAM_DIR / "{sample}.aligned.sorted.bam.bai"))
     conda:
         "../envs/bwameth.yaml"
     params:
