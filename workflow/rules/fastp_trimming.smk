@@ -5,8 +5,8 @@ rule fastp_trim:
     output:
         r1=temp(str(TRIMMED_DIR / "{sample}.trimmed.R1.fastq.gz")),
         r2=temp(str(TRIMMED_DIR / "{sample}.trimmed.R2.fastq.gz")),
-        html=str(QC_DIR / "fastp" / "{sample}.fastp.html"),
-        json=str(QC_DIR / "fastp" / "{sample}.fastp.json")
+        html=temp(str(QC_DIR / "fastp" / "{sample}.fastp.html")),
+        json=temp(str(QC_DIR / "fastp" / "{sample}.fastp.json"))
     conda:
         "../envs/fastp.yaml"
     threads: 8
