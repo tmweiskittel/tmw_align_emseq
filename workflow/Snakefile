@@ -27,6 +27,7 @@ MBIAS_DIR = QC_DIR / "mbias"
 SUMMARY_DIR = QC_DIR / "summary"
 SPIKEIN_DIR = QC_DIR / "spikein"
 COVERAGE_DIR = QC_DIR / "coverage"
+UPLOAD_DIR = LOCAL_PATH / "upload"
 
 # -------------------------
 # reference paths
