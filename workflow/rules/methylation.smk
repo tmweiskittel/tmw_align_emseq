@@ -36,7 +36,8 @@ rule methyldackel_mbias:
         bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"),
         ref=str(BWA_FA)
     output:
-        txt=str(MBIAS_DIR / "{sample}.M-bias.txt")
+        ot=str(MBIAS_DIR / "{sample}_OT.svg"),
+        ob=str(MBIAS_DIR / "{sample}_OB.svg")
     params:
         prefix=str(MBIAS_DIR / "{sample}")
     conda:
