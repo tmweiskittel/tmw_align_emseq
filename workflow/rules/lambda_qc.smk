@@ -2,7 +2,7 @@ rule lambda_spikein_qc:
     input:
         cpg=str(METH_DIR / "{sample}.CpG.methylKit.gz")
     output:
-        tsv=str(SPIKEIN_DIR / "{sample}.lambda_qc.tsv")
+        tsv=temp(str(SPIKEIN_DIR / "{sample}.lambda_qc.tsv"))
     log:
         str(LOCAL_PATH / "logs" / "lambda_spikein_qc" / "{sample}.log")
     shell:
