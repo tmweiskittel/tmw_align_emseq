@@ -53,6 +53,7 @@ rule methyldackel_mbias:
             -@ {threads} \
             {input.ref} \
             {input.bam} \
+            {params.prefix} \
             > {log} 2>&1
         
         mbias_file=$(find . -maxdepth 1 -type f -name "*.M-bias.txt" | head -n 1)
