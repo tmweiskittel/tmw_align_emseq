@@ -1,6 +1,6 @@
 meta:
   data_path: weiskittel-projects1/radnecrosis/raw_data
-  sample_sheet: radnec_test.csv
+  sample_sheet: samples.csv
   md5_sheet: MD5.txt
   local_path: /home/jupyter/data
   results_bucket: weiskittel-projects1
