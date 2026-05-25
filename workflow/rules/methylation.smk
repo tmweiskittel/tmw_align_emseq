@@ -4,7 +4,7 @@ rule methyldackel_extract:
         bai=str(BAM_DIR / "{sample}.aligned.sorted.filt.bl.bam.bai"),
         ref=str(BWA_FA)
     output:
-        cpg=temp(str(METH_DIR / "{sample}.CpG.methylKit.gz"))
+        cpg=temp(str(METH_DIR / "{sample}.CpG.methylKit"))
     params:
         prefix=str(METH_DIR / "{sample}")
     conda:
@@ -15,7 +15,7 @@ rule methyldackel_extract:
     shell:
         r"""
         set -euo pipefail
-        mkdir -p {METH_DIR} $(dirname {log})
+        mkdir -p $(dirname {output.cpg}) $(dirname {log})
 
         MethylDackel extract \
             -@ {threads} \
@@ -26,8 +26,7 @@ rule methyldackel_extract:
             {input.ref} \
             {input.bam} \
             > {log} 2>&1
-        gzip -f {params.prefix}_CpG.methylKit
-        mv {params.prefix}_CpG.methylKit.gz {output.cpg}
+        mv {params.prefix}_CpG.methylKit {output.cpg}
         """
 
 rule methyldackel_mbias:
@@ -60,3 +59,36 @@ rule methyldackel_mbias:
 
         """
 
+rule make_single_methylkit_methyldackel_obj:
+    input:
+        cpg=str(METH_DIR / "{sample}.CpG.methylKit")
+    output:
+        bgz=temp(str(METH_DIR / "{sample}.methyldackel.txt.bgz")),
+        tbi=temp(str(METH_DIR / "{sample}.methyldackel.txt.bgz.tbi")),
+        cpg_gz=temp(str(METH_DIR / "{sample}.CpG.methylKit.gz"))
+    params:
+        Rscript=str(LOCAL_PATH / "scripts" / "make_single_amp_methylkit_obj.R"),
+        mincov=config.get("emseq_mincov", 5),
+        build=config["meta"]["ref_name"],
+        treatment=1
+    conda:
+        "../envs/methylkit.yaml"
+    threads: 1
+    log:
+        str(LOCAL_PATH / "logs" / "make_single_methylkit_methyldackel_obj" / "{sample}.log")
+    shell:
+        r"""
+        set -euo pipefail
+        mkdir -p $(dirname {output.bgz}) $(dirname {log})
+
+        Rscript {params.Rscript} \
+            --amp_file {input.cpg} \
+            --library_id {wildcards.sample}.methyldackel \
+            --mincov {params.mincov} \
+            --out_dir $(dirname {output.bgz}) \
+            --treatment {params.treatment} \
+            --build {params.build} \
+            > {log} 2>&1
+
+        gzip -c {input.cpg} > {output.cpg_gz}
+        """
