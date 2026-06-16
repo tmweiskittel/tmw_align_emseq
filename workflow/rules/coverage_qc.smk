@@ -38,8 +38,12 @@ with gzip.open(cpg_file, "rt") as fh:
 
         try:
             coverage = int(fields[4])
-            meth = int(fields[5])
-            unmeth = int(fields[6])
+            coverage = int(fields[4])
+            freqC = float(fields[5])
+            freqT = float(fields[6])
+
+            meth = coverage * freqC / 100.0
+            unmeth = coverage * freqT / 100.0
         except ValueError:
             continue
 
@@ -92,8 +96,8 @@ with open(out_file, "w", newline="") as out:
     ])
     writer.writerow([
         site_count,
-        meth_sum,
-        unmeth_sum,
+        round(meth_sum),
+        round(unmeth_sum),
         mean_coverage,
         median_coverage,
         mean_methylation_fraction,
