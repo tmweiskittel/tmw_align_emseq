@@ -72,6 +72,24 @@ with open(coverage_qc_file, newline="") as fh:
         coverage_metrics = row
         break
 
+estimated_mapped_bases = "NA"
+estimated_genome_depth = "NA"
+
+# Human GRCh38/hg38 approximate haploid genome size.
+# Change if using a different reference.
+genome_size = 3100000000
+
+read1_len = summary_after.get("read1_mean_length", None)
+read2_len = summary_after.get("read2_mean_length", None)
+
+try:
+    mean_read_length = (float(read1_len) + float(read2_len)) / 2
+    estimated_mapped_bases = human_reads * mean_read_length
+    estimated_genome_depth = "%.6f" % (estimated_mapped_bases / genome_size)
+    estimated_mapped_bases = round(estimated_mapped_bases)
+except (TypeError, ValueError):
+    pass
+
 fieldnames = [
     "sample",
     "fastp_before_total_reads",
@@ -124,6 +142,8 @@ fieldnames = [
     "lambda_methylated_counts",
     "lambda_unmethylated_counts",
     "lambda_mean_methylation_fraction",
+    "estimated_mapped_bases",
+    "estimated_genome_depth",
 ]
 
 row = {
@@ -162,6 +182,8 @@ row = {
     "raw_bam_size_bytes": raw_bam_size_bytes,
     "final_bam_size_bytes": final_bam_size_bytes,
     "final_human_mapped_reads": human_reads,
+    "estimated_mapped_bases": estimated_mapped_bases,
+    "estimated_genome_depth": estimated_genome_depth,
     "final_lambda_mapped_reads": lambda_reads,
     "final_pUC19_mapped_reads": puc19_reads,
     "cpg_sites_called": coverage_metrics.get("cpg_sites_called", "NA"),
