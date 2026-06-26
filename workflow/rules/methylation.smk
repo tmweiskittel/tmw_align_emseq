@@ -67,7 +67,7 @@ rule make_single_methylkit_methyldackel_obj:
         tbi=temp(str(METH_DIR / "{sample}.methyldackel.txt.bgz.tbi")),
         cpg_gz=temp(str(METH_DIR / "{sample}.CpG.methylKit.gz"))
     params:
-        Rscript=str(LOCAL_PATH / "workflow" / "scripts" / "make_single_amp_methylkit_obj.R"),
+        Rscript="../workflow/scripts/make_single_amp_methylkit_obj.R",
         mincov=config.get("emseq_mincov", 5),
         build=config["meta"]["ref_name"],
         treatment=1
