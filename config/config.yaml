@@ -3,6 +3,7 @@ meta:
   sample_sheet: samples.csv
   md5_sheet: MD5.txt
   local_path: /home/jupyter/data
+  repo_path: /home/jupyter/repos/tmw_align_emseq
   results_bucket: weiskittel-projects1
   results_prefix: radnecrosis/processed
   ref_name: hg38
