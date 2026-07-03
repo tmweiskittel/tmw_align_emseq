@@ -12,5 +12,5 @@ dependencies:
   - bioconductor-genomeinfodb
   - r-argparse
   - r-optparse
-  - r-data.table
+  - r-data.table=1.14.8
   - tabix
