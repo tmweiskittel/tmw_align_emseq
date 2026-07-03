@@ -11,6 +11,7 @@ configfile: "config/config.yaml"
 
 # shared paths
 DATA_PATH = config["meta"]["data_path"]
+REPO_PATH = config["meta"]["repo_path"]
 SAMPLE_SHEET = config["meta"]["sample_sheet"]
 MD5_SHEET = config["meta"]["md5_sheet"]
 LOCAL_PATH = Path(config["meta"]["local_path"])
