@@ -9,7 +9,7 @@ rule fastp_trim:
         json=temp(str(QC_DIR / "fastp" / "{sample}.fastp.json"))
     conda:
         "../envs/fastp.yaml"
-    threads: 8
+    threads: 1
     log:
         str(LOCAL_PATH / "logs" / "fastp" / "{sample}.log")
     shell:
