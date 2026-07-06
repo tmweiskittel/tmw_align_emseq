@@ -7,6 +7,8 @@ rule download_fastqs:
         r2=lambda wc: get_fastq_r2(wc.sample)
     log:
         str(LOCAL_PATH / "logs" / "download_fastqs" / "{sample}.log")
+    resources
+        upload_limit=1
     shell:
         r"""
         set -euo pipefail
