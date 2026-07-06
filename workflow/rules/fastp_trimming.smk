@@ -25,5 +25,6 @@ rule fastp_trim:
             --html {output.html} \
             --json {output.json} \
             --thread {threads} \
+            --verbose
             > {log} 2>&1
         """
