@@ -7,7 +7,11 @@ meta:
   results_bucket: weiskittel-projects1
   results_prefix: radnecrosis/processed
   ref_name: hg38
-  
+
+resources:
+  fastp_limit: 6
+  upload_limit: 6
+
 reference:
   root: resources/reference
   hg38_fasta_gz: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/analysisSet/hg38.analysisSet.fa.gz
