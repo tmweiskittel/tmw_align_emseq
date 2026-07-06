@@ -8,7 +8,7 @@ rule download_fastqs:
     log:
         str(LOCAL_PATH / "logs" / "download_fastqs" / "{sample}.log")
     resources:
-        upload_limit=1
+        download_limit=1
     shell:
         r"""
         set -euo pipefail
