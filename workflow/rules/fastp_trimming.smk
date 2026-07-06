@@ -17,14 +17,20 @@ rule fastp_trim:
         set -euo pipefail
         mkdir -p {TRIMMED_DIR} {QC_DIR}/fastp {LOCAL_PATH}/logs/fastp
 
+        rm -f {output.r1}.tmp {output.r2}.tmp {output.html}.tmp {output.json}.tmp
+
         fastp \
             --in1 {input.r1} \
             --in2 {input.r2} \
-            --out1 {output.r1} \
-            --out2 {output.r2} \
-            --html {output.html} \
-            --json {output.json} \
+            --out1 {output.r1}.tmp \
+            --out2 {output.r2}.tmp \
+            --html {output.html}.tmp \
+            --json {output.json}.tmp \
             --thread {threads} \
-            --verbose
             > {log} 2>&1
+
+        mv {output.r1}.tmp {output.r1}
+        mv {output.r2}.tmp {output.r2}
+        mv {output.html}.tmp {output.html}
+        mv {output.json}.tmp {output.json}
         """
