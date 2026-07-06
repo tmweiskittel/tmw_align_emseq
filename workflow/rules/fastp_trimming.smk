@@ -10,6 +10,8 @@ rule fastp_trim:
     conda:
         "../envs/fastp.yaml"
     threads: 2
+    resources:
+        fastp_limit=1
     log:
         str(LOCAL_PATH / "logs" / "fastp" / "{sample}.log")
     shell:
