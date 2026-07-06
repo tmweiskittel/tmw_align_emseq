@@ -9,8 +9,8 @@ meta:
   ref_name: hg38
 
 resources:
-  fastp_limit: 6
-  upload_limit: 6
+  fastp_limit: 3
+  upload_limit: 3
 
 reference:
   root: resources/reference
