@@ -10,7 +10,7 @@ meta:
 
 resources:
   fastp_limit: 3
-  upload_limit: 3
+  download_limit: 3
 
 reference:
   root: resources/reference
