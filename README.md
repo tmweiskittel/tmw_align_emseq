@@ -71,3 +71,5 @@ The [profiles `README.md`](profiles/README.md) provides more details.
 
 - optimize where log files are stored
 - 
+## Troubleshooting
+- make sure using a newer version of snakemake so that temp()'d files are removed during pipeline run time
