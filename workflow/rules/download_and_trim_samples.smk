@@ -3,7 +3,7 @@ rule download_and_trim_fastqs:
         r1=temp(str(TRIMMED_DIR / "{sample}.trimmed.R1.fastq.gz")),
         r2=temp(str(TRIMMED_DIR / "{sample}.trimmed.R2.fastq.gz")),
         html=str(LOCAL_PATH / "logs" / "fastp" / "{sample}.html"),
-        json=str(LOCAL_PATH / "logs" / "fastp" / "{sample}.fastp.json")
+        json=str(LOCAL_PATH / "qc" / "fastp" / "{sample}.fastp.json")
     params:
         r1=lambda wc: get_fastq_r1(wc.sample),
         r2=lambda wc: get_fastq_r2(wc.sample)
