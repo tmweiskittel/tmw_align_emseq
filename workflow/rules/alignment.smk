@@ -13,6 +13,8 @@ rule bwameth_align:
         bwameth_threads=22,
         sort_threads=8
     threads: 30
+    resources:
+        align_limit=1
     log:
         str(LOCAL_PATH / "logs" / "bwameth_align" / "{sample}.log")
     shell:
