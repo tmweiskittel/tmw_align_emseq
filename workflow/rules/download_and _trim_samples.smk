@@ -10,7 +10,6 @@ rule download_and_trim_fastqs:
     threads: 4
     resources:
         fastp_limit=1,
-        download_limit=1
     log:
         str(LOCAL_PATH / "logs" / "fastp" / "{sample}.log")
     shell:
