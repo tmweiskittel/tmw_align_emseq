@@ -15,7 +15,7 @@ rule download_and_trim_fastqs:
     shell:
         r"""
         set -euo pipefail
-        mkdir -p {TRIM_DIR} {LOCAL_PATH}/logs/fastp {FASTQ_DIR}
+        mkdir -p {TRIMMED_DIR} {LOCAL_PATH}/logs/fastp {FASTQ_DIR}
 
         raw_r1="{FASTQ_DIR}/{wildcards.sample}.R1.fastq.gz"
         raw_r2="{FASTQ_DIR}/{wildcards.sample}.R2.fastq.gz"
