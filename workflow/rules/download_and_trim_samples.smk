@@ -1,7 +1,7 @@
 rule download_and_trim_fastqs:
     output:
-        r1=temp(str(TRIMMED_DIR / "{sample}.R1.trimmed.fastq.gz")),
-        r2=temp(str(TRIMMED_DIR / "{sample}.R2.trimmed.fastq.gz")),
+        r1=temp(str(TRIMMED_DIR / "{sample}.trimmed.R1.fastq.gz")),
+        r2=temp(str(TRIMMED_DIR / "{sample}.trimmed.R2.fastq.gz")),
         html=str(LOCAL_PATH / "logs" / "fastp" / "{sample}.html"),
         json=str(LOCAL_PATH / "logs" / "fastp" / "{sample}.json")
     params:
