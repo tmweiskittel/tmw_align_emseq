@@ -67,7 +67,7 @@ rule make_single_methylkit_methyldackel_obj:
         tbi=temp(str(METH_DIR / "{sample}.methyldackel.txt.bgz.tbi")),
         cpg_gz=temp(str(METH_DIR / "{sample}.CpG.methylKit.gz"))
     params:
-        Rscript=f"{REPO_PATH}/workflow/scripts/make_single_amp_methylkit_obj.R",
+        rscript=f"{REPO_PATH}/workflow/scripts/make_single_amp_methylkit_obj.R",
         mincov=config.get("emseq_mincov", 5),
         build=config["meta"]["ref_name"],
         treatment=1
@@ -79,13 +79,15 @@ rule make_single_methylkit_methyldackel_obj:
         set -euo pipefail
         mkdir -p $(dirname {output.bgz}) $(dirname {log})
 
-       conda run -n methylkit Rscript {params.Rscript} \
+        conda run -n methylkit Rscript {params.rscript} \
             --amp_file {input.cpg} \
             --library_id {wildcards.sample}.methyldackel \
             --mincov {params.mincov} \
             --out_dir $(dirname {output.bgz}) \
             --treatment {params.treatment} \
             --build {params.build} \
-    > {log} 2>&1
+            > {log} 2>&1
+
         gzip -c {input.cpg} > {output.cpg_gz}
         """
+
