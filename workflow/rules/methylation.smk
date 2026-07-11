@@ -80,7 +80,7 @@ rule make_single_methylkit_methyldackel_obj:
         mkdir -p $(dirname {output.bgz}) $(dirname {log})
 
        conda run -n methylkit Rscript {params.Rscript} \
-            --amp_file {input.amp_file} \
+            --amp_file {input.cpg} \
             --library_id {wildcards.sample}.methyldackel \
             --mincov {params.mincov} \
             --out_dir $(dirname {output.bgz}) \
