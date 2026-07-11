@@ -79,7 +79,7 @@ rule make_single_methylkit_methyldackel_obj:
         set -euo pipefail
         mkdir -p $(dirname {output.bgz}) $(dirname {log})
 
-       conda run -n methylkit Rscript {params.rscript} \
+       conda run -n methylkit Rscript {params.Rscript} \
             --amp_file {input.amp_file} \
             --library_id {wildcards.sample}.methyldackel \
             --mincov {params.mincov} \
