@@ -73,3 +73,10 @@ The [profiles `README.md`](profiles/README.md) provides more details.
 - 
 ## Troubleshooting
 - make sure using a newer version of snakemake so that temp()'d files are removed during pipeline run time
+
+## Setup
+conda config --set ssl_verify /etc/ssl/certs/ca-certificates.crt
+conda config --set channel_priority strict
+
+# doublecheck- should result in "ssl_verify: /etc/ssl/certs/ca-certificates.crt"
+conda config --show ssl_verify
