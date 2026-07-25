@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import csv
 import gzip
 import json
@@ -7,73 +8,159 @@ import os
 import statistics
 import subprocess
 import tempfile
-from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Calculate raw FASTQ-equivalent coverage, aligned genome-wide "
+            "coverage, and CpG coverage metrics."
+        )
+    )
+
+    parser.add_argument(
+        "--sample",
+        required=True,
+        help="Sample identifier."
+    )
+
+    parser.add_argument(
+        "--cpg",
+        required=True,
+        help="Gzip-compressed methylKit CpG file."
+    )
+
+    parser.add_argument(
+        "--bam",
+        required=True,
+        help="Coordinate-sorted and indexed final BAM file."
+    )
+
+    parser.add_argument(
+        "--fastp-json",
+        required=True,
+        help="fastp JSON report."
+    )
+
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Output coverage-QC TSV."
+    )
+
+    parser.add_argument(
+        "--genome-size",
+        required=True,
+        type=int,
+        help=(
+            "Genome-size denominator used for vendor-style raw coverage."
+        )
+    )
+
+    parser.add_argument(
+        "--min-mapq",
+        required=True,
+        type=int,
+        help="Minimum mapping quality used by samtools depth."
+    )
+
+    parser.add_argument(
+        "--min-baseq",
+        required=True,
+        type=int,
+        help="Minimum base quality used by samtools depth."
+    )
+
+    parser.add_argument(
+        "--excluded-contigs",
+        default="lambda,pUC19",
+        help=(
+            "Comma-separated contigs excluded from aligned human coverage."
+        )
+    )
+
+    return parser.parse_args()
 
 
 def format_float(
     value: Optional[float],
-    decimals: int = 6,
+    decimals: int = 6
 ) -> str:
-    """Format a numeric QC value or return NA."""
     if value is None:
         return "NA"
 
     return f"{value:.{decimals}f}"
 
 
-def read_first_tsv_row(filename: str) -> Dict[str, str]:
-    """Read the first data row from a tab-delimited file."""
-    with open(filename, newline="") as fh:
-        reader = csv.DictReader(fh, delimiter="\t")
+def run_command(command: Sequence[str]) -> str:
+    completed = subprocess.run(
+        list(command),
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
 
-        for row in reader:
-            return dict(row)
+    if completed.stderr:
+        print(completed.stderr, end="")
 
-    return {}
+    return completed.stdout
 
 
-def read_fastp_metrics(
+def calculate_raw_fastq_coverage(
     fastp_json: str,
-    genome_size: int,
+    genome_size: int
 ) -> Dict[str, object]:
     """
-    Calculate vendor-style raw sequencing coverage from fastp.
+    Calculate vendor-style raw coverage from fastp before-filtering bases.
 
-    fastp summary.before_filtering.total_bases represents the bases supplied
-    to fastp before trimming and quality filtering.
+    fastp summary.before_filtering.total_bases represents the bases present
+    before fastp trimming and filtering.
     """
-    with open(fastp_json) as fh:
+    if genome_size <= 0:
+        raise ValueError(
+            f"Genome-size denominator must be positive: {genome_size}"
+        )
+
+    with open(fastp_json, encoding="utf-8") as fh:
         fastp = json.load(fh)
 
-    before = fastp.get("summary", {}).get("before_filtering", {})
+    before_filtering = (
+        fastp
+        .get("summary", {})
+        .get("before_filtering", {})
+    )
 
-    raw_total_bases = before.get("total_bases")
-    raw_total_reads = before.get("total_reads")
-    read1_mean_length = before.get("read1_mean_length")
-    read2_mean_length = before.get("read2_mean_length")
+    total_bases = before_filtering.get("total_bases")
 
-    raw_fastq_coverage: Optional[float] = None
+    if total_bases is None:
+        raise ValueError(
+            "fastp JSON does not contain "
+            "summary.before_filtering.total_bases"
+        )
 
     try:
-        raw_fastq_coverage = float(raw_total_bases) / genome_size
-    except (TypeError, ValueError, ZeroDivisionError):
-        pass
+        total_bases = int(total_bases)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "Invalid fastp before-filtering total_bases value: "
+            f"{total_bases}"
+        ) from exc
+
+    raw_fastq_coverage = total_bases / genome_size
 
     return {
+        "vendor_genome_size_denominator": genome_size,
         "raw_fastq_coverage": raw_fastq_coverage,
-        "raw_total_bases": raw_total_bases,
-        "raw_total_reads": raw_total_reads,
-        "read1_mean_length": read1_mean_length,
-        "read2_mean_length": read2_mean_length,
     }
 
 
 def calculate_cpg_metrics(cpg_file: str) -> Dict[str, object]:
     """
-    Calculate CpG metrics from a methylKit-format file.
+    Calculate metrics for CpGs represented in a methylKit file.
 
-    Expected columns:
+    Expected methylKit columns:
         0: chrBase
         1: chr
         2: base
@@ -87,6 +174,8 @@ def calculate_cpg_metrics(cpg_file: str) -> Dict[str, object]:
     methylated_sum = 0.0
     unmethylated_sum = 0.0
 
+    skipped_lines = 0
+
     with gzip.open(cpg_file, "rt") as fh:
         for line_number, line in enumerate(fh, start=1):
             if not line.strip() or line.startswith("#"):
@@ -95,6 +184,7 @@ def calculate_cpg_metrics(cpg_file: str) -> Dict[str, object]:
             fields = line.rstrip("\n").split("\t")
 
             if len(fields) < 7:
+                skipped_lines += 1
                 print(
                     f"Skipping CpG line {line_number}: "
                     "fewer than seven columns"
@@ -106,10 +196,11 @@ def calculate_cpg_metrics(cpg_file: str) -> Dict[str, object]:
                 freq_c = float(fields[5])
                 freq_t = float(fields[6])
             except ValueError:
-                # This also skips a header row when one is present.
+                # This also skips a methylKit header row.
                 continue
 
             if coverage < 0:
+                skipped_lines += 1
                 print(
                     f"Skipping CpG line {line_number}: "
                     f"negative coverage {coverage}"
@@ -118,12 +209,10 @@ def calculate_cpg_metrics(cpg_file: str) -> Dict[str, object]:
 
             coverages.append(coverage)
 
-            # methylKit stores percentages. These reconstructed totals are
-            # approximate if freqC and freqT have been rounded.
+            # These counts are reconstructed from coverage and rounded
+            # percentages, so they are approximate.
             methylated_sum += coverage * freq_c / 100.0
             unmethylated_sum += coverage * freq_t / 100.0
-
-    cpg_sites_called = len(coverages)
 
     mean_coverage: Optional[float] = None
     median_coverage: Optional[float] = None
@@ -137,43 +226,30 @@ def calculate_cpg_metrics(cpg_file: str) -> Dict[str, object]:
     methylation_fraction: Optional[float] = None
 
     if total_observations > 0:
-        methylation_fraction = methylated_sum / total_observations
+        methylation_fraction = (
+            methylated_sum / total_observations
+        )
+
+    print(f"CpG lines skipped: {skipped_lines}")
 
     return {
-        "cpg_sites_called": cpg_sites_called,
+        "cpg_sites_called": len(coverages),
         "approx_total_methylated_counts": round(methylated_sum),
         "approx_total_unmethylated_counts": round(unmethylated_sum),
         "mean_coverage_called_cpgs": mean_coverage,
         "median_coverage_called_cpgs": median_coverage,
-        "coverage_weighted_methylation_fraction": methylation_fraction,
+        "coverage_weighted_methylation_fraction":
+            methylation_fraction,
     }
 
 
-def run_command(
-    command: Sequence[str],
-) -> str:
-    """Run a command safely and return standard output."""
-    completed = subprocess.run(
-        list(command),
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-
-    if completed.stderr:
-        print(completed.stderr, end="")
-
-    return completed.stdout
-
-
-def get_reference_contigs(
+def get_included_reference_contigs(
     bam_file: str,
-    excluded_contigs: Sequence[str],
+    excluded_contigs: Sequence[str]
 ) -> List[Tuple[str, int]]:
     """
-    Read reference contig names and lengths from the BAM header.
-
-    Spike-in contigs are excluded from the human aligned-depth denominator.
+    Get reference contigs and lengths from the BAM header, excluding
+    specified spike-in contigs.
     """
     excluded = set(excluded_contigs)
 
@@ -182,93 +258,97 @@ def get_reference_contigs(
             "samtools",
             "view",
             "-H",
-            bam_file,
+            bam_file
         ]
     )
 
-    contigs: List[Tuple[str, int]] = []
+    included_contigs: List[Tuple[str, int]] = []
 
     for line in header.splitlines():
         if not line.startswith("@SQ\t"):
             continue
 
-        name: Optional[str] = None
-        length: Optional[int] = None
+        contig_name: Optional[str] = None
+        contig_length: Optional[int] = None
 
         for field in line.split("\t")[1:]:
             if field.startswith("SN:"):
-                name = field[3:]
+                contig_name = field[3:]
             elif field.startswith("LN:"):
-                length = int(field[3:])
+                contig_length = int(field[3:])
 
-        if name is None or length is None:
+        if contig_name is None or contig_length is None:
             continue
 
-        if name in excluded:
+        if contig_name in excluded:
             continue
 
-        contigs.append((name, length))
-
-    if not contigs:
-        raise RuntimeError(
-            "No reference contigs remained after exclusions"
+        included_contigs.append(
+            (contig_name, contig_length)
         )
 
-    return contigs
+    if not included_contigs:
+        raise RuntimeError(
+            "No reference contigs remained after excluding: "
+            + ",".join(excluded_contigs)
+        )
+
+    return included_contigs
 
 
-def write_reference_bed(
+def write_contig_bed(
     contigs: Sequence[Tuple[str, int]],
-    bed_file: str,
+    bed_file: str
 ) -> None:
-    """Write one whole-contig BED interval per included reference contig."""
-    with open(bed_file, "w") as out:
-        for contig, length in contigs:
-            out.write(f"{contig}\t0\t{length}\n")
+    with open(bed_file, "w", encoding="utf-8") as out:
+        for contig_name, contig_length in contigs:
+            out.write(
+                f"{contig_name}\t0\t{contig_length}\n"
+            )
 
 
 def calculate_aligned_base_coverage(
     bam_file: str,
     min_mapq: int,
     min_baseq: int,
-    excluded_contigs: Sequence[str],
+    excluded_contigs: Sequence[str]
 ) -> Dict[str, object]:
     """
-    Calculate mean aligned base depth across selected reference contigs.
+    Calculate mean base coverage across included reference contigs.
 
-    samtools depth:
-        -aa includes zero-depth positions.
-        -s suppresses overlapping mate double-counting.
-        -q sets minimum base quality.
-        -Q sets minimum mapping quality.
-        -b restricts calculation to human reference contigs.
+    samtools depth options:
+        -aa: emit zero-coverage positions
+        -s: count overlapping paired-end mates once
+        -q: minimum base quality
+        -Q: minimum mapping quality
+        -b: restrict analysis to included reference intervals
     """
-    contigs = get_reference_contigs(
+    contigs = get_included_reference_contigs(
         bam_file=bam_file,
-        excluded_contigs=excluded_contigs,
+        excluded_contigs=excluded_contigs
     )
 
-    expected_reference_bases = sum(
+    expected_reference_size = sum(
         length
         for _, length in contigs
     )
 
-    if expected_reference_bases <= 0:
+    if expected_reference_size <= 0:
         raise RuntimeError(
-            "Reference denominator is zero"
+            "Aligned reference denominator is zero"
         )
 
     with tempfile.TemporaryDirectory(
         prefix="coverage_qc_"
-    ) as temp_dir:
+    ) as temporary_directory:
         bed_file = os.path.join(
-            temp_dir,
-            "included_reference_contigs.bed",
+            temporary_directory,
+            "included_reference_contigs.bed"
         )
 
-        write_reference_bed(
+        write_contig_bed(
             contigs=contigs,
-            bed_file=bed_file,
+            bed_file=bed_file
         )
 
         command = [
@@ -282,12 +362,12 @@ def calculate_aligned_base_coverage(
             str(min_mapq),
             "-b",
             bed_file,
-            bam_file,
+            bam_file
         ]
 
         print(
-            "Running:",
-            " ".join(command),
+            "Running aligned-depth command: "
+            + " ".join(command)
         )
 
         process = subprocess.Popen(
@@ -295,7 +375,7 @@ def calculate_aligned_base_coverage(
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            bufsize=1024 * 1024,
+            bufsize=1024 * 1024
         )
 
         if process.stdout is None:
@@ -303,8 +383,8 @@ def calculate_aligned_base_coverage(
                 "Could not read samtools depth output"
             )
 
-        observed_reference_bases = 0
-        total_depth = 0
+        observed_reference_positions = 0
+        total_aligned_depth = 0
 
         for line in process.stdout:
             fields = line.rstrip("\n").split("\t")
@@ -317,8 +397,8 @@ def calculate_aligned_base_coverage(
             except ValueError:
                 continue
 
-            observed_reference_bases += 1
-            total_depth += depth
+            observed_reference_positions += 1
+            total_aligned_depth += depth
 
         stderr_text = ""
 
@@ -334,30 +414,32 @@ def calculate_aligned_base_coverage(
             raise subprocess.CalledProcessError(
                 return_code,
                 command,
-                stderr=stderr_text,
+                stderr=stderr_text
             )
 
-    if observed_reference_bases != expected_reference_bases:
+    if observed_reference_positions != expected_reference_size:
         raise RuntimeError(
-            "samtools depth returned an unexpected number of positions: "
-            f"expected={expected_reference_bases}, "
-            f"observed={observed_reference_bases}"
+            "Unexpected number of reference positions from samtools depth: "
+            f"expected={expected_reference_size}, "
+            f"observed={observed_reference_positions}"
         )
 
-    mean_coverage = total_depth / expected_reference_bases
+    mean_aligned_base_coverage = (
+        total_aligned_depth / expected_reference_size
+    )
 
     return {
-        "mean_aligned_base_coverage": mean_coverage,
-        "aligned_reference_size_denominator": expected_reference_bases,
-        "included_reference_contigs": len(contigs),
+        "mean_aligned_base_coverage":
+            mean_aligned_base_coverage,
+        "aligned_reference_size_denominator":
+            expected_reference_size,
     }
 
 
 def write_output(
-    out_file: str,
-    metrics: Dict[str, object],
+    output_file: str,
+    metrics: Dict[str, object]
 ) -> None:
-    """Write the one-row coverage QC table."""
     fieldnames = [
         "vendor_genome_size_denominator",
         "raw_fastq_coverage",
@@ -375,17 +457,25 @@ def write_output(
         "coverage_weighted_methylation_fraction",
     ]
 
-    output_directory = os.path.dirname(out_file)
+    output_directory = os.path.dirname(output_file)
 
     if output_directory:
-        os.makedirs(output_directory, exist_ok=True)
+        os.makedirs(
+            output_directory,
+            exist_ok=True
+        )
 
-    with open(out_file, "w", newline="") as out:
+    with open(
+        output_file,
+        "w",
+        newline="",
+        encoding="utf-8"
+    ) as out:
         writer = csv.DictWriter(
             out,
             fieldnames=fieldnames,
             delimiter="\t",
-            extrasaction="ignore",
+            extrasaction="raise"
         )
 
         writer.writeheader()
@@ -393,78 +483,111 @@ def write_output(
 
 
 def main() -> None:
-    sample = str(snakemake.wildcards.sample)
+    args = parse_arguments()
 
-    cpg_file = str(snakemake.input.cpg)
-    bam_file = str(snakemake.input.bam)
-    fastp_json = str(snakemake.input.fastp_json)
-    out_file = str(snakemake.output.tsv)
+    excluded_contigs = [
+        contig.strip()
+        for contig in args.excluded_contigs.split(",")
+        if contig.strip()
+    ]
 
-    genome_size = int(snakemake.params.genome_size)
-    min_mapq = int(snakemake.params.min_mapq)
-    min_baseq = int(snakemake.params.min_baseq)
-
-    excluded_contigs = list(
-        snakemake.params.excluded_contigs
+    print(f"Sample: {args.sample}")
+    print(f"CpG input: {args.cpg}")
+    print(f"BAM input: {args.bam}")
+    print(f"fastp JSON: {args.fastp_json}")
+    print(f"Output: {args.output}")
+    print(
+        "Excluded aligned-depth contigs: "
+        + ",".join(excluded_contigs)
     )
 
-    print(f"Sample: {sample}")
-    print(f"CpG file: {cpg_file}")
-    print(f"BAM file: {bam_file}")
-    print(f"fastp JSON: {fastp_json}")
-    print(f"Output: {out_file}")
-
-    fastp_metrics = read_fastp_metrics(
-        fastp_json=fastp_json,
-        genome_size=genome_size,
+    raw_metrics = calculate_raw_fastq_coverage(
+        fastp_json=args.fastp_json,
+        genome_size=args.genome_size
     )
 
     cpg_metrics = calculate_cpg_metrics(
-        cpg_file=cpg_file,
+        cpg_file=args.cpg
     )
 
     aligned_metrics = calculate_aligned_base_coverage(
-        bam_file=bam_file,
-        min_mapq=min_mapq,
-        min_baseq=min_baseq,
-        excluded_contigs=excluded_contigs,
+        bam_file=args.bam,
+        min_mapq=args.min_mapq,
+        min_baseq=args.min_baseq,
+        excluded_contigs=excluded_contigs
     )
 
     metrics: Dict[str, object] = {
-        "vendor_genome_size_denominator": genome_size,
-        "raw_fastq_coverage": format_float(
-            fastp_metrics["raw_fastq_coverage"]
-        ),
-        "mean_aligned_base_coverage": format_float(
-            aligned_metrics["mean_aligned_base_coverage"]
-        ),
+        "vendor_genome_size_denominator":
+            raw_metrics["vendor_genome_size_denominator"],
+
+        "raw_fastq_coverage":
+            format_float(
+                raw_metrics["raw_fastq_coverage"]
+            ),
+
+        "mean_aligned_base_coverage":
+            format_float(
+                aligned_metrics[
+                    "mean_aligned_base_coverage"
+                ]
+            ),
+
         "aligned_reference_size_denominator":
-            aligned_metrics["aligned_reference_size_denominator"],
-        "minimum_mapping_quality": min_mapq,
-        "minimum_base_quality": min_baseq,
-        "overlapping_mates_counted_once": "true",
-        "excluded_depth_contigs": ",".join(excluded_contigs),
-        "cpg_sites_called": cpg_metrics["cpg_sites_called"],
+            aligned_metrics[
+                "aligned_reference_size_denominator"
+            ],
+
+        "minimum_mapping_quality":
+            args.min_mapq,
+
+        "minimum_base_quality":
+            args.min_baseq,
+
+        "overlapping_mates_counted_once":
+            "true",
+
+        "excluded_depth_contigs":
+            ",".join(excluded_contigs),
+
+        "cpg_sites_called":
+            cpg_metrics["cpg_sites_called"],
+
         "approx_total_methylated_counts":
-            cpg_metrics["approx_total_methylated_counts"],
-        "approx_total_unmethylated_counts":
-            cpg_metrics["approx_total_unmethylated_counts"],
-        "mean_coverage_called_cpgs": format_float(
-            cpg_metrics["mean_coverage_called_cpgs"]
-        ),
-        "median_coverage_called_cpgs": format_float(
-            cpg_metrics["median_coverage_called_cpgs"]
-        ),
-        "coverage_weighted_methylation_fraction": format_float(
             cpg_metrics[
-                "coverage_weighted_methylation_fraction"
-            ]
-        ),
+                "approx_total_methylated_counts"
+            ],
+
+        "approx_total_unmethylated_counts":
+            cpg_metrics[
+                "approx_total_unmethylated_counts"
+            ],
+
+        "mean_coverage_called_cpgs":
+            format_float(
+                cpg_metrics[
+                    "mean_coverage_called_cpgs"
+                ]
+            ),
+
+        "median_coverage_called_cpgs":
+            format_float(
+                cpg_metrics[
+                    "median_coverage_called_cpgs"
+                ]
+            ),
+
+        "coverage_weighted_methylation_fraction":
+            format_float(
+                cpg_metrics[
+                    "coverage_weighted_methylation_fraction"
+                ]
+            ),
     }
 
     write_output(
-        out_file=out_file,
-        metrics=metrics,
+        output_file=args.output,
+        metrics=metrics
     )
 
     print("")
@@ -492,4 +615,5 @@ def main() -> None:
     )
 
 
-main()
+if __name__ == "__main__":
+    main()
