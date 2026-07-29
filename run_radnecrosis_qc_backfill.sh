@@ -8,7 +8,7 @@ set -euo pipefail
 # ============================================================================
 
 # Sample sheet used by the original project.
-SAMPLE_SHEET_GS="gs://weiskittel-projects1/radnecrosis/raw_data/samples.csv"
+SAMPLE_SHEET="${SAMPLE_SHEET:-/home/jupyter/data/samples.csv}"
 
 # Root beneath which the existing per-sample pipeline outputs are stored.
 # The script inventories this location and finds files by exact basename.
@@ -44,7 +44,6 @@ EXCLUDED_CONTIGS="lambda,pUC19"
 # Local paths
 # ============================================================================
 
-SAMPLE_SHEET="${WORK_ROOT}/samples.csv"
 CLOUD_INVENTORY="${WORK_ROOT}/cloud_inventory.txt"
 FAILURE_LOG="${WORK_ROOT}/qc_backfill_failures.tsv"
 SUCCESS_LOG="${WORK_ROOT}/qc_backfill_successes.tsv"
@@ -58,7 +57,12 @@ printf "sample\tcoverage_output\tsummary_output\n" > "${SUCCESS_LOG}"
 # ============================================================================
 # Validation
 # ============================================================================
-
+if [[ ! -s "${SAMPLE_SHEET}" ]]; then
+     echo "ERROR: Sample sheet is missing or empty:" >&2
+     echo "  ${SAMPLE_SHEET}" >&2
+      exit 1
+fi
+    
 for program in gcloud python3 samtools awk; do
     if ! command -v "${program}" >/dev/null 2>&1; then
         echo "ERROR: Required program not found: ${program}" >&2
@@ -181,16 +185,6 @@ cleanup_sample_directory() {
     fi
 }
 
-
-# ============================================================================
-# Download the sample sheet
-# ============================================================================
-
-echo "Downloading sample sheet..."
-
-gcloud storage cp \
-    "${SAMPLE_SHEET_GS}" \
-    "${SAMPLE_SHEET}"
 
 
 # ============================================================================
@@ -332,6 +326,7 @@ for sample in "${SAMPLES[@]}"; do
     # Validate the existing local fastp JSON before downloading large BAMs
     # ------------------------------------------------------------------------
 
+    
     if [[ ! -s "${fastp_json}" ]]; then
         echo "ERROR: fastp JSON is missing or empty:"
         echo "  ${fastp_json}"
